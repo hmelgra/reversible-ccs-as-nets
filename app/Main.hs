@@ -14,7 +14,8 @@ main = do
   case args of
     [ccs'] -> do
       let x = (read ccs' :: CCS Int)
-      start ccs
+      print x
+      start x
 
 start :: CCS Int -> IO()
 start ccs = do
@@ -45,19 +46,3 @@ simulate net = do
                 simulate new
               else
                 putStrLn "Bye"
-
-
-ccs1 :: CCS Int
-ccs1 = Rec "X" (In 1 :. Var "X")
-
-ccs2 :: CCS Int
-ccs2 = Rec "X" ((Out 2 :. Var "X") :+ (Out 1 :. Nil))
-
-ccs :: CCS Int
-ccs = (ccs1 :| ccs2) :\ 1
-
-ccs3 :: CCS Int
-ccs3 = In 1 :. Out 2 :. Nil
-
-ccs4 :: CCS Int
-ccs4 = Out 1 :. In 2 :. Nil

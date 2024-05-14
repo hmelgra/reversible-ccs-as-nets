@@ -11,6 +11,8 @@ module Ccs
   )
 where
 
+import Data.Char (isSpace)
+
 data Action a
   = In a   -- Input
   | Out a  -- Output
@@ -35,6 +37,18 @@ infixr 5 :.
 infixl 6 :|
 infixl 7 :+
 
+{- Type for process variable names. Allows for the redefinition of Read -}
+newtype VarName = VarName String deriving (Eq, Ord)
+
+instance Read VarName where
+    readsPrec _ str = [(VarName parsedStr, rest)] where
+        isDelimiter c = isSpace c || c `elem` ".()"
+        (parsedStr, rest) = parseStringWithoutQuotes str
+        parseStringWithoutQuotes :: String -> (String, String)
+        parseStringWithoutQuotes str' =
+            let (parsed, rest') = break isDelimiter (dropWhile isSpace str')
+            in (parsed, dropWhile isSpace rest')
+
 {- Syntax for infinite CCS Processes -}
 data CCS a
   = (Action a) :. (CCS a)  -- Prefix
@@ -42,8 +56,8 @@ data CCS a
   | (CCS a) :+ (CCS a)     -- Choice
   | (CCS a) :\ a           -- Restriction
   | Nil                    -- Ended process
-  | Var String             -- Process variable
-  | Rec String (CCS a)     -- Recursive process
+  | Var VarName            -- Process variable
+  | Rec VarName (CCS a)    -- Recursive process
   deriving (Eq, Ord, Read)
 
 instance (Show a) => Show (CCS a)  where
@@ -52,8 +66,8 @@ instance (Show a) => Show (CCS a)  where
   show (x :+ y)  = show x ++ "+" ++ show y
   show (x :\ y)  = "(" ++ show x ++ ")\\ " ++ show y
   show Nil       = "0"
-  show (Var x)   = x
-  show (Rec x p) = "Rec " ++ x ++ "." ++ show p
+  show (Var (VarName x))   = x
+  show (Rec (VarName x) p) = "Rec " ++ x ++ "." ++ show p
 
 {- Substitution of a process variable by a process -}
 subs :: CCS a    -- ^ process over which substitution is applied
@@ -66,13 +80,13 @@ subs (p :+ q) x r = subs p x r :+ subs q x r
 subs (p :\ a) x r = subs p x r :\ a
 subs Nil  _ _     = Nil
 subs (Var y) x r
-  | y == x        = r
+  | y == VarName x        = r
   | otherwise     = Var y
 subs (Rec y p) x r
-  | y == x        = Rec y p
+  | y == VarName x        = Rec y p
   | otherwise     = Rec y (subs p x r)
 
 {- Unfolding step of a  process -}
 unfold :: CCS a -> CCS a
-unfold (Rec x p) = subs p x (Rec x p)
-unfold p         = p
+unfold (Rec (VarName x) p) = subs p x (Rec (VarName x) p)
+unfold p                   = p
