@@ -22,11 +22,27 @@ import           Test.Framework
 
 
 
-ccs :: CCS Char
-ccs = (In 'a' :. Out 'a' :. Nil) :| ((Out 'a' :. Nil) :+ (In 'b' :. Nil))
+-- ccs :: CCS Char
+-- ccs = (In 'a' :. Out 'a' :. Nil) :| ((Out 'a' :. Nil) :+ (In 'b' :. Nil))
 
 ccs' :: CCS Char
-ccs' = Rec "X" (In 'a' :. Var "X")
+ccs' = Rec (VarName "X") (In 'a' :. Var (VarName "X") )
 
 ccs'' :: CCS Char
-ccs'' = (Rec "X" (In 'a' :. Var "X") :| ((Out 'a' :. Nil) :+ (In 'b' :. Nil)))
+ccs'' = (Rec (VarName "X") (In 'a' :. Var (VarName "X")) :| ((Out 'a' :. Nil) :+ (In 'b' :. Nil)))
+
+
+ccs1 :: CCS Int
+ccs1 = Rec (VarName "X") (In 1 :. Var (VarName "X"))
+
+ccs2 :: CCS Int
+ccs2 = Rec (VarName "X") ((Out 2 :. Var (VarName "X")) :+ (Out 1 :. Nil))
+
+ccs :: CCS Int
+ccs = (ccs1 :| ccs2) :\ 1
+
+ccs3 :: CCS Int
+ccs3 = In 1 :. Out 2 :. Nil
+
+ccs4 :: CCS Int
+ccs4 = Out 1 :. In 2 :. Nil

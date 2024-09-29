@@ -2,6 +2,7 @@ module Ccs
   (
   -- * Types
     Action (In, Out, Tau)
+  , VarName(VarName)
   , CCS ((:.), (:|), (:+), (:\), Nil, Var, Rec)
   -- * Check action duality
   , dual
